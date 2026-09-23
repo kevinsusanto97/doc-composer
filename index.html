@@ -141,7 +141,7 @@ select.status{border:1px solid var(--line);background:var(--paper);border-radius
 .sheet[data-type="prd"]{--accent:var(--prd)}
 .sheet[data-type="brd"]{--accent:var(--brd)}
 .sheet{--accent-soft:color-mix(in srgb, var(--accent) 14%, var(--paper));--accent-ink:color-mix(in srgb, var(--accent), #fff var(--accent-lift))}
-.sheet[data-design="modern"],.sheet[data-design="minimal"],.sheet[data-design="bold"]{--head-font:var(--sans)}
+.sheet[data-design="modern"],.sheet[data-design="minimal"],.sheet[data-design="bold"],.sheet[data-design="corporate"]{--head-font:var(--sans)}
 .sheet[data-font="serif"]{--head-font:var(--serif)}
 .sheet[data-font="sans"]{--head-font:var(--sans)}
 .sheet[data-font="mono"]{--head-font:var(--mono)}
@@ -157,6 +157,16 @@ select.status{border:1px solid var(--line);background:var(--paper);border-radius
 .sheet[data-design="bold"] .editor h2{background:var(--accent);color:var(--on-accent);border:0;padding:7px 14px;border-radius:6px;font-size:19px}
 .sheet[data-design="bold"] .editor th{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .sheet[data-design="bold"] .editor blockquote{border-left-width:5px}
+.sheet[data-design="corporate"]{--corp-band:color-mix(in srgb, var(--accent) 10%, var(--rail))}
+.sheet[data-design="corporate"] .sheet-head{position:relative;padding-top:56px}
+.sheet[data-design="corporate"] .sheet-head::before{content:"";position:absolute;top:0;left:0;right:0;height:40px;background:var(--corp-band,var(--rail));border-bottom:2px solid var(--accent,var(--prd))}
+.sheet[data-design="corporate"]:has(.cover-band) .sheet-head::before{display:none}
+.sheet[data-design="corporate"] .title-input{font-weight:500;letter-spacing:-.005em}
+.sheet[data-design="corporate"] .editor h2{text-transform:uppercase;font-weight:500;letter-spacing:.01em;font-size:23px;color:var(--accent-ink,var(--prd));border-bottom:0;padding-bottom:0;margin-top:1.9em}
+.sheet[data-design="corporate"] .editor h3{text-transform:uppercase;font-weight:600;letter-spacing:.08em;font-size:12px;color:var(--ink-3);margin:1.6em 0 .5em}
+.sheet[data-design="corporate"] .editor th{background:var(--accent,var(--prd));color:var(--on-accent);text-transform:none;letter-spacing:0}
+.sheet[data-design="corporate"] .editor td:first-child,.sheet[data-design="corporate"] .editor th:first-child{font-weight:600}
+.sheet[data-design="corporate"] .editor blockquote{background:none;border-radius:0;border-left:3px solid var(--accent,var(--prd));font-style:italic;color:var(--ink-2)}
 
 /* Cover banner */
 .cover-band{position:relative;aspect-ratio:4/1;border-radius:11px 11px 0 0;overflow:hidden;background:var(--line-soft)}
@@ -305,40 +315,52 @@ const TEMPLATES = {
   },
   prd: {
     label:'Product Requirements', badge:'PRD',
-    desc:'Defines what the product must do: users, stories, functional and non-functional requirements, acceptance criteria.',
-    secs:'12 sections · overview, user stories, requirements, flows, edge cases, release plan',
+    desc:'Documents a process end to end: today’s manual workflow, the pain points, the digitalized flow by actor, form and data structure, status lifecycle, and who can access what.',
+    secs:'8 sections · background, digitalization process, scope, form structure, status flow, user privilege',
     title:'PRD: [Feature name]',
     html: () => `
-<h2>1. Document information</h2>
-${tbl(['Field','Detail'],[['Product / feature','[Feature name]'],['Product manager','[Name]'],['Related BRD','[Link or document name]'],['Version','0.1'],['Last updated',TODAY()],['Target release','[Quarter / sprint]']])}
-<h2>2. Overview</h2>
-<p>[Summarize the feature in 2–3 sentences: what it is, who it is for, and which business need from the BRD it fulfils.]</p>
-<blockquote>Example: Tenants can view unpaid invoices in the app and pay them via virtual account or e-wallet. Payment status updates automatically in the billing system.</blockquote>
-<h2>3. Goals and non-goals</h2>
-<h3>Goals</h3>
-<ul><li>[Measurable goal, e.g. a tenant can pay an invoice in under 2 minutes]</li><li>[Goal 2]</li></ul>
-<h3>Non-goals</h3>
-<ul><li>[What this release deliberately will not do, e.g. autopay or saved cards]</li></ul>
-<h2>4. User personas</h2>
-${tbl(['Persona','Description','Key need'],[['[Residential tenant]','[Mobile-first, pays monthly rent]','[Fast, familiar payment methods]'],['[Finance staff]','[Reconciles payments daily]','[No manual proof-of-transfer checks]']])}
-<h2>5. User stories</h2>
-${tbl(['ID','As a…','I want to…','So that…','Priority'],[['US-01','[tenant]','[see my unpaid invoices]','[I know what to pay]','Must'],['US-02','[tenant]','[choose a payment method]','[I can use my own bank or e-wallet]','Must'],['US-03','[finance staff]','[see payments marked paid automatically]','[I don’t check transfers manually]','Should']])}
-<h2>6. Functional requirements</h2>
-${tbl(['ID','Requirement','Related story','Priority'],[['FR-01','[The system shows a list of unpaid invoices with amount, due date and status]','US-01','Must'],['FR-02','[The system generates a virtual account number valid for 24 hours]','US-02','Must'],['FR-03','[The invoice status changes to “Paid” when a successful payment callback is received]','US-03','Must']])}
-<h2>7. Non-functional requirements</h2>
-<ul><li><strong>Performance:</strong> [e.g. callback processed in under 5 seconds]</li><li><strong>Availability:</strong> [e.g. 99.5% uptime]</li><li><strong>Security:</strong> [e.g. no card data stored; handled by the payment vendor]</li><li><strong>Reliability:</strong> [e.g. retry failed callbacks up to 3 times]</li></ul>
-<h2>8. User flow</h2>
-<ol><li>[Invoice list]</li><li>[Invoice detail]</li><li>[Choose payment method]</li><li>[Payment instructions]</li><li>[Success screen and receipt]</li></ol>
-<p>[Link to wireframes or design file]</p>
-<h2>9. Acceptance criteria</h2>
-${tbl(['ID','Given','When','Then'],[['AC-01','[an unpaid invoice]','[the tenant pays through the virtual account]','[the status shows “Paid” within 1 minute and a receipt is sent]'],['AC-02','[an expired virtual account]','[the tenant opens payment instructions]','[the app offers to generate a new one]']])}
-<h2>10. Edge cases</h2>
-<ul><li>[Expired payment code]</li><li>[Double payment]</li><li>[Partial payment]</li><li>[Callback received but status not updated]</li></ul>
-<h2>11. Dependencies and analytics</h2>
-<ul><li><strong>Dependencies:</strong> [Vendor API docs, billing system API, notification service]</li><li><strong>Tracking events:</strong> [payment_started, payment_completed, drop-off per step]</li></ul>
-<h2>12. Release plan and open questions</h2>
-${tbl(['Phase','Scope','Date'],[['Pilot','[One property]','[Date]'],['General release','[All properties]','[Date]']])}
-<h3>Open questions</h3>
+<h2>Document information</h2>
+${tbl(['Field','Detail'],[['Feature / project','[Feature name]'],['Prepared by','[Name, team]'],['Version','0.1'],['Last updated',TODAY()],['Target release','[Quarter / sprint]']])}
+<h2>Background</h2>
+<h3>Existing process</h3>
+<p>[Describe how this is handled today, step by step, and who is involved. Name the teams and the handoffs between them.]</p>
+<blockquote>Example: Today, tenants request an overnight parking permit by filling in a paper form and dropping it at the front desk. Building Operation compiles the forms each morning and Tenant Relation manually checks them against the previous night’s security log, which takes most of the day and often finds mismatches.</blockquote>
+<h3>Pain points</h3>
+<ul>
+<li><strong>[Pain point 1]</strong> — [what it costs today: time, errors, or missed cases.]</li>
+<li><strong>[Pain point 2]</strong> — [who feels it and how often.]</li>
+<li><strong>[Pain point 3]</strong> — [what breaks down when volume increases.]</li>
+</ul>
+<h2>Digitalization process</h2>
+<p>[One or two sentences on the system being introduced and which users it serves.]</p>
+<h3>[Flow name] ([Actor 1] &amp; [Actor 2])</h3>
+<ol>
+<li>[Actor 1] [does the first action, e.g. opens the request form in the mobile app].</li>
+<li>[Actor 1] [submits the form; the system creates a record with status “[Initial status]”].</li>
+<li>[Actor 2] [receives a notification and reviews the submission].</li>
+</ol>
+<h3>[Next flow name] ([Actor])</h3>
+<ol>
+<li>[Describe the next handoff, e.g. approval, in the same step-by-step style.]</li>
+<li>[The system updates the status and notifies the requester.]</li>
+</ol>
+<h2>Project scope</h2>
+<h3>In scope (MVP)</h3>
+<ol>
+<li><strong>[Capability 1]</strong> on [platform, e.g. mobile app] for [who it serves].</li>
+<li><strong>[Capability 2]</strong> — [one line on what it covers].</li>
+<li><strong>[Capability 3]</strong> — [one line on what it covers].</li>
+</ol>
+<h3>Next phase</h3>
+<ol><li><strong>[Deferred capability]</strong> — [why it’s out of scope for this release].</li></ol>
+<h2>Form structure</h2>
+<p>[Name of form] ([Platform])</p>
+${tbl(['Component','Type','Input','Constraint'],[['[Field name]','[Dropdown / Text input / Date picker]','Mandatory','[Format or source, e.g. Master data]'],['[Field name]','[Text input]','Mandatory','[Max length or pattern]'],['[Field name]','[Radio]','Mandatory','[Allowed values]']])}
+<h2>Status flow</h2>
+${tbl(['Status','Entered when','Next status'],[['[Waiting for review]','[Request submitted]','[In review] or [Cancelled]'],['[In review]','[Reviewer opens the request]','[Waiting for approval] or [Rejected]'],['[Waiting for approval]','[Reviewer requests approval]','[Completed] or [Rejected]'],['[Completed]','[Approver approves]','[Closed] (auto after [N] days)']])}
+<h2>User privilege</h2>
+${tbl(['Component','Platform','User','Access'],[['[Form request]','[Mobile]','[Requester]','Create'],['[Ticket management]','[Mobile]','[Requester]','View, Cancel while [status]'],['[Ticket management]','[Portal]','[Reviewer / Approver]','View, Update'],['[Dashboard]','[Portal]','[Reviewer / Ops team]','View']])}
+<h2>Open questions</h2>
 <ul><li>[Unresolved decision, owner, due date]</li></ul>`
   },
   brd: {
@@ -452,14 +474,16 @@ function coverSrc(cover){
 const DEFAULT_COVER = { prd:{kind:'preset', id:'horizon'}, brd:{kind:'preset', id:'dune'}, blank:null };
 
 const DESIGNS = {
-  classic:{ name:'Classic', desc:'Serif headings, ruled sections' },
-  modern: { name:'Modern',  desc:'Sans headings in the accent color' },
-  minimal:{ name:'Minimal', desc:'Quiet type, open tables' },
-  bold:   { name:'Bold',    desc:'Solid section bands' }
+  classic:  { name:'Classic',   desc:'Serif headings, ruled sections' },
+  modern:   { name:'Modern',    desc:'Sans headings in the accent color' },
+  minimal:  { name:'Minimal',   desc:'Quiet type, open tables' },
+  bold:     { name:'Bold',      desc:'Solid section bands' },
+  corporate:{ name:'Corporate', desc:'Letterhead header, uppercase labels, solid tables' }
 };
 const ACCENTS = [['#2D4FD6','Blue'], ['#A96A12','Amber'], ['#1F7A4D','Green'], ['#B42318','Red'], ['#7C3AED','Violet'], ['#0E7490','Teal'], ['#DB2777','Pink'], ['#334155','Slate']];
 const FONTS = { serif:'Serif', sans:'Sans', mono:'Mono' };
 const DEFAULT_DESIGN = { theme:'classic', accent:null, font:null };
+const DEFAULT_THEME = { prd:'corporate', brd:'classic', blank:'classic' };
 
 const isHex = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i+2), 16));
@@ -970,28 +994,40 @@ function buildPdf(jsPDF, meta, blocks){
   const M = 18, CW = W - M*2, BOTTOM = H - 18;
   const accent = meta.accent ? hexRgb(meta.accent) : meta.type==='prd' ? [45,79,214] : meta.type==='brd' ? [169,106,18] : [70,78,94];
   const ink=[26,33,48], grey=[110,118,134];
-  let y = M;
+  const CORP = meta.theme === 'corporate';
+  const HEAD_H = 15;
+  function pageHeader(){
+    if (!CORP) return M;
+    doc.setFillColor(234,237,242); doc.rect(0, 0, W, HEAD_H, 'F');
+    doc.setDrawColor(...accent); doc.setLineWidth(0.6); doc.line(0, HEAD_H, W, HEAD_H);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 108, 124);
+    doc.text(clean((meta.badge ? meta.badge + ' — ' : '') + (meta.title || 'Untitled')), M, HEAD_H/2 + 3.2, {maxWidth: CW - 10});
+    return HEAD_H + 10;
+  }
+  let y = pageHeader();
   if (meta.coverSrc){
     const bh = CW/4; doc.addImage(meta.coverSrc, 'JPEG', M, y, CW, bh); y += bh + 8;
   }
   const lh = pt => pt*0.3528*1.45;
-  const need = h => { if (y + h > BOTTOM){ doc.addPage(); y = M; } };
+  const need = h => { if (y + h > BOTTOM){ doc.addPage(); y = pageHeader(); } };
   function para(text, {size=10.5, style='normal', color=ink, x=M, width=CW, after=2.2}={}){
     doc.setFont('helvetica', style); doc.setFontSize(size); doc.setTextColor(...color);
     const lines = doc.splitTextToSize(clean(text), width);
     for (const ln of lines){ need(lh(size)); doc.text(ln, x, y + lh(size)*0.75); y += lh(size); }
     y += after;
   }
-  // title block
-  doc.setFillColor(...accent); doc.rect(M, y, 14, 1.4, 'F'); y += 6;
+  // title block (corporate theme skips the accent bar; the letterhead band already carries the accent rule)
+  if (!CORP){ doc.setFillColor(...accent); doc.rect(M, y, 14, 1.4, 'F'); y += 6; }
   para(meta.title || 'Untitled', {size:20, style:'bold', after:1.5});
   para([meta.badge, meta.status, 'Updated ' + meta.date].filter(Boolean).join('   |   '), {size:9, color:grey, after:6});
   for (const b of blocks){
     if (b.t==='h'){
       const size = b.level===1 ? 15 : b.level===2 ? 13 : 11.2;
       y += b.level===3 ? 1.5 : 3.5; need(lh(size) + 8);
-      para(b.text, {size, style:'bold', after: b.level===2 ? 1 : 1.5});
-      if (b.level===2){ doc.setDrawColor(215,219,228); doc.setLineWidth(0.25); doc.line(M, y, M+CW, y); y += 3; }
+      if (CORP && b.level===2) para(b.text.toUpperCase(), {size, style:'bold', color:accent, after:1});
+      else if (CORP && b.level===3) para(b.text.toUpperCase(), {size:9, style:'bold', color:grey, after:1});
+      else para(b.text, {size, style:'bold', after: b.level===2 ? 1 : 1.5});
+      if (b.level===2 && !CORP){ doc.setDrawColor(215,219,228); doc.setLineWidth(0.25); doc.line(M, y, M+CW, y); y += 3; }
     } else if (b.t==='p'){ para(b.text); }
     else if (b.t==='li'){
       const ind = M + 4 + b.depth*5;
@@ -1011,9 +1047,10 @@ function buildPdf(jsPDF, meta, blocks){
     } else if (b.t==='table'){
       y += 1;
       doc.autoTable({ startY:y, head: b.head.length ? [b.head.map(clean)] : undefined, body: b.body.map(r=>r.map(clean)),
-        margin:{left:M, right:M, top:M, bottom:18}, theme:'grid',
+        margin:{left:M, right:M, top: CORP ? HEAD_H+10 : M, bottom:18}, theme:'grid',
         styles:{font:'helvetica', fontSize:9, cellPadding:2.2, textColor:ink, lineColor:[215,219,228], lineWidth:0.2, overflow:'linebreak', valign:'top'},
-        headStyles:{fillColor:[241,243,247], textColor:ink, fontStyle:'bold'} });
+        headStyles: CORP ? {fillColor:accent, textColor:[255,255,255], fontStyle:'bold'} : {fillColor:[241,243,247], textColor:ink, fontStyle:'bold'},
+        didDrawPage: () => { if (CORP) pageHeader(); } });
       y = doc.lastAutoTable.finalY + 5;
     } else if (b.t==='hr'){ need(6); y += 2; doc.setDrawColor(215,219,228); doc.line(M, y, M+CW, y); y += 4; }
   }
@@ -1065,7 +1102,7 @@ async function exportPdf(){
   try{
     const look = lookOf(d);
     const pdf = buildPdf(window.jspdf.jsPDF, { title:d.title, type:d.type, badge:TEMPLATES[d.type].label, status:d.status||'Draft',
-      accent: look.accent, coverSrc: coverSrc(d.cover),
+      accent: look.accent, theme: look.theme, coverSrc: coverSrc(d.cover),
       date:new Date(d.updatedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) }, htmlToBlocks(d.html||''));
     const name = ((d.title||'untitled').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-').toLowerCase() || 'untitled') + '.pdf';
     await downloads.save({ filename:name, data: pdf.output('blob') });
@@ -1082,7 +1119,7 @@ function createDoc(type){
   pickedOnce = true;
   const t = TEMPLATES[type]; const now = Date.now();
   const doc = { id:uid(), type, title: t.title, html: typeof t.html==='function' ? t.html().trim() : t.html, status:'Draft',
-    cover: DEFAULT_COVER[type] || null, design: { ...DEFAULT_DESIGN }, createdAt:now, updatedAt:now };
+    cover: DEFAULT_COVER[type] || null, design: { ...DEFAULT_DESIGN, theme: DEFAULT_THEME[type] || DEFAULT_DESIGN.theme }, createdAt:now, updatedAt:now };
   state.docs.set(doc.id, doc); state.currentId = doc.id; state.view = 'doc';
   render(); persist({...doc}); closeDrawer();
   const title = $('title'); if (title){ title.focus(); if (type!=='blank') title.select(); }
