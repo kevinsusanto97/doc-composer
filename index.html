@@ -6,7 +6,7 @@
 <title>Requirements Composer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Literata:opsz,wght@7..72,500;7..72,600;7..72,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Literata:opsz,wght@7..72,500;7..72,600;7..72,700&display=swap" rel="stylesheet">
 <style>
 :root{
   --canvas:#E9ECF1; --rail:#F4F6F9; --paper:#FFFFFF; --ink:#1A2130; --ink-2:#4A5468; --ink-3:#7C8699;
@@ -15,6 +15,8 @@
   --danger:#B42318; --ok:#1F7A4D;
   --serif:"Literata", Georgia, "Times New Roman", serif;
   --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --on-accent:#FFFFFF; --accent-lift:0%;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
   color-scheme:light;
@@ -24,14 +26,14 @@
     --canvas:#12161E; --rail:#171C26; --paper:#1D2330; --ink:#E7EAF1; --ink-2:#AEB6C6; --ink-3:#7D8698;
     --line:#2E3647; --line-soft:#262D3C; --hover:#252C3A; --select:#27335C;
     --prd:#8EA5FF; --prd-soft:#26305A; --brd:#E3AE5B; --brd-soft:#3B2E17; --blank:#A7AFBF; --blank-soft:#2A3140;
-    --danger:#F47B6E; --ok:#5CC690; color-scheme:dark;
+    --danger:#F47B6E; --ok:#5CC690; --on-accent:#12161E; --accent-lift:35%; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --canvas:#12161E; --rail:#171C26; --paper:#1D2330; --ink:#E7EAF1; --ink-2:#AEB6C6; --ink-3:#7D8698;
   --line:#2E3647; --line-soft:#262D3C; --hover:#252C3A; --select:#27335C;
   --prd:#8EA5FF; --prd-soft:#26305A; --brd:#E3AE5B; --brd-soft:#3B2E17; --blank:#A7AFBF; --blank-soft:#2A3140;
-  --danger:#F47B6E; --ok:#5CC690; color-scheme:dark;
+  --danger:#F47B6E; --ok:#5CC690; --on-accent:#12161E; --accent-lift:35%; color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -80,7 +82,7 @@ select.status{border:1px solid var(--line);background:var(--paper);border-radius
 .scroller{flex:1;overflow-y:auto}
 .sheet{max-width:860px;margin:28px auto 80px;background:var(--paper);border:1px solid var(--line);border-radius:12px;min-height:calc(100% - 108px)}
 .sheet-head{padding:40px 64px 8px}
-.title-input{width:100%;border:0;background:none;font-family:var(--serif);font-size:34px;font-weight:600;letter-spacing:-.015em;line-height:1.2;padding:0}
+.title-input{width:100%;border:0;background:none;font-family:var(--head-font,var(--serif));font-size:34px;font-weight:600;letter-spacing:-.015em;line-height:1.2;padding:0}
 .title-input::placeholder{color:var(--ink-3)}
 .title-input:focus{outline:none}
 .meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;font-size:13px;color:var(--ink-3)}
@@ -95,7 +97,7 @@ select.status{border:1px solid var(--line);background:var(--paper);border-radius
 /* Document body */
 .editor{padding:24px 64px 72px;outline:none;min-height:360px;font-size:16px;line-height:1.65;overflow-wrap:break-word}
 .editor:empty::before{content:"Start writing, or type # for a heading, - for a list";color:var(--ink-3)}
-.editor h1,.editor h2,.editor h3{font-family:var(--serif);letter-spacing:-.01em;line-height:1.3}
+.editor h1,.editor h2,.editor h3{font-family:var(--head-font,var(--serif));letter-spacing:-.01em;line-height:1.3}
 .editor h1{font-size:26px;margin:1.4em 0 .4em}
 .editor h2{font-size:21px;margin:1.6em 0 .4em;padding-bottom:.25em;border-bottom:1px solid var(--line-soft)}
 .editor h3{font-size:17px;margin:1.3em 0 .3em}
@@ -103,14 +105,13 @@ select.status{border:1px solid var(--line);background:var(--paper);border-radius
 .editor p{margin:.5em 0}
 .editor ul,.editor ol{padding-left:1.4em;margin:.5em 0}
 .editor li{margin:.2em 0}
-.editor blockquote{margin:1em 0;padding:10px 16px;border-left:3px solid var(--prd);background:var(--prd-soft);border-radius:0 8px 8px 0;color:var(--ink)}
-.editor[data-type="brd"] blockquote{border-left-color:var(--brd);background:var(--brd-soft)}
+.editor blockquote{margin:1em 0;padding:10px 16px;border-left:3px solid var(--accent,var(--prd));background:var(--accent-soft,var(--prd-soft));border-radius:0 8px 8px 0;color:var(--ink)}
 .editor hr{border:0;border-top:1px solid var(--line);margin:2em 0}
 .editor .tbl-wrap{overflow-x:auto;margin:1em 0}
 .editor table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.45}
 .editor th,.editor td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;min-width:90px}
 .editor th{background:var(--rail);font-weight:600}
-.editor a{color:var(--prd)}
+.editor a{color:var(--accent-ink,var(--prd))}
 
 /* Template picker */
 .picker{max-width:920px;margin:0 auto;padding:48px 28px 80px}
@@ -135,6 +136,86 @@ select.status{border:1px solid var(--line);background:var(--paper);border-radius
 .tpl .desc{font-size:13.5px;color:var(--ink-2);line-height:1.5}
 .tpl .secs{font-size:12.5px;color:var(--ink-3);margin-top:10px;line-height:1.5}
 
+/* Document look: accent, heading font and design theme */
+.sheet{--accent:var(--blank);--head-font:var(--serif)}
+.sheet[data-type="prd"]{--accent:var(--prd)}
+.sheet[data-type="brd"]{--accent:var(--brd)}
+.sheet{--accent-soft:color-mix(in srgb, var(--accent) 14%, var(--paper));--accent-ink:color-mix(in srgb, var(--accent), #fff var(--accent-lift))}
+.sheet[data-design="modern"],.sheet[data-design="minimal"],.sheet[data-design="bold"]{--head-font:var(--sans)}
+.sheet[data-font="serif"]{--head-font:var(--serif)}
+.sheet[data-font="sans"]{--head-font:var(--sans)}
+.sheet[data-font="mono"]{--head-font:var(--mono)}
+.sheet[data-design="modern"] .title-input{font-weight:700;letter-spacing:-.025em}
+.sheet[data-design="modern"] .editor h2{color:var(--accent-ink,var(--prd));border-bottom:0;padding-bottom:0;font-weight:700}
+.sheet[data-design="modern"] .editor th{background:var(--accent-soft,var(--prd-soft))}
+.sheet[data-design="minimal"] .title-input{font-weight:500}
+.sheet[data-design="minimal"] .editor h2{font-size:18px;font-weight:600;border-bottom:0;padding-bottom:0;margin-top:2em}
+.sheet[data-design="minimal"] .editor th,.sheet[data-design="minimal"] .editor td{border:0;border-bottom:1px solid var(--line-soft)}
+.sheet[data-design="minimal"] .editor th{background:none;color:var(--ink-3);font-size:12px;text-transform:uppercase;letter-spacing:.06em;border-bottom-color:var(--line)}
+.sheet[data-design="minimal"] .editor blockquote{background:none;border-left:2px solid var(--line);border-radius:0;color:var(--ink-2)}
+.sheet[data-design="bold"] .title-input{font-weight:700}
+.sheet[data-design="bold"] .editor h2{background:var(--accent);color:var(--on-accent);border:0;padding:7px 14px;border-radius:6px;font-size:19px}
+.sheet[data-design="bold"] .editor th{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.sheet[data-design="bold"] .editor blockquote{border-left-width:5px}
+
+/* Cover banner */
+.cover-band{position:relative;aspect-ratio:4/1;border-radius:11px 11px 0 0;overflow:hidden;background:var(--line-soft)}
+.cover-band img{display:block;width:100%;height:100%;object-fit:cover}
+.cover-edit{position:absolute;right:12px;bottom:12px;border:0;border-radius:8px;padding:6px 10px;font-size:12.5px;background:rgba(15,20,30,.66);color:#fff;opacity:0;transition:opacity .15s}
+.cover-band:hover .cover-edit,.cover-edit:focus-visible{opacity:1}
+@media (hover:none){ .cover-edit{opacity:1} }
+.meta-link{border:0;background:none;padding:0;font-size:13px;color:var(--ink-2);text-decoration:underline;text-underline-offset:2px}
+.meta-link:hover{color:var(--ink)}
+
+/* Cover and design step */
+.custom{max-width:1120px;margin:0 auto;padding:36px 28px 80px}
+.custom-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.custom h1{font-family:var(--serif);font-size:30px;font-weight:600;letter-spacing:-.015em;margin:0 0 6px}
+.custom p.lead{color:var(--ink-2);margin:0;max-width:60ch}
+.custom-actions{display:flex;gap:8px}
+.btn{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 14px;font-size:14px;font-weight:500}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.primary:hover{opacity:.9;background:var(--ink)}
+.custom-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start}
+.pv-wrap{position:sticky;top:20px}
+.sheet.pv{margin:0;min-height:0;max-width:none;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pv .sheet-head{padding:28px 36px 4px}
+.pv .title-input{font-size:28px}
+.pv .editor{padding:16px 36px 36px;min-height:0;font-size:15px}
+.opts{display:flex;flex-direction:column;gap:24px}
+.opt h2{font:600 12px/1.4 var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);margin:0 0 10px}
+.opt .hint{font-size:12.5px;color:var(--ink-3);margin:8px 0 0}
+.opt .hint.err{color:var(--danger)}
+.cover-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cv{aspect-ratio:2.6/1;border:1px solid var(--line);border-radius:8px;padding:0;overflow:hidden;background:var(--paper);display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
+.cv img{width:100%;height:100%;object-fit:cover;display:block}
+.cv:hover{border-color:var(--ink-3)}
+.cv.upload{border-style:dashed}
+.cv[aria-pressed="true"]{outline:2px solid var(--prd);outline-offset:2px}
+.theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.th-card{border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:8px 8px 10px;text-align:left}
+.th-card:hover{border-color:var(--ink-3)}
+.th-card[aria-pressed="true"]{border-color:var(--prd);box-shadow:0 0 0 1px var(--prd)}
+.th-card .nm{font-weight:600;font-size:13.5px;margin:0 2px}
+.th-card .ds{font-size:12px;color:var(--ink-3);line-height:1.4;margin:1px 2px 0}
+.th-mock{height:66px;overflow:hidden;border-radius:6px;margin-bottom:8px;box-shadow:0 0 0 1px var(--line-soft);pointer-events:none}
+.th-mock > .sheet{transform:scale(.42);transform-origin:0 0;width:238%}
+.sheet.mini-sheet{margin:0;border:0;border-radius:0;min-height:0;max-width:none}
+.mini-sheet .editor{padding:14px 20px;min-height:0;font-size:14px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sw{width:28px;height:28px;border-radius:50%;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--line);padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 10px 4px 6px;font-size:12.5px}
+.pill[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.pill .dot{width:16px;height:16px;border-radius:50%}
+.pill input[type=color]{width:18px;height:18px;border:0;padding:0;background:none;border-radius:50%;cursor:pointer}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;background:none;padding:6px 12px;font-size:13px;border-right:1px solid var(--line-soft)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--select)}
+.opts-foot{display:flex;gap:8px;justify-content:flex-end;padding-top:4px}
+
 .loading{padding:60px;text-align:center;color:var(--ink-3)}
 .scrim{display:none}
 
@@ -155,6 +236,15 @@ select.status{border:1px solid var(--line);background:var(--paper);border-radius
   .picker{padding:28px 18px 60px}
   .picker h1{font-size:26px}
   .hide-sm{display:none}
+  .sheet:not(.pv) .cover-band{border-radius:0}
+  .custom{padding:24px 16px 60px}
+  .custom h1{font-size:25px}
+  .custom-grid{grid-template-columns:1fr;gap:22px}
+  .pv-wrap{position:static}
+  .pv .sheet-head{padding:20px 20px 4px}
+  .pv .title-input{font-size:22px}
+  .pv .editor{padding:12px 20px 24px;font-size:14px}
+  .custom-head .custom-actions{display:none}
 }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
@@ -189,6 +279,7 @@ select.status{border:1px solid var(--line);background:var(--paper);border-radius
         <select class="status" id="status" aria-label="Document status">
           <option>Draft</option><option>In review</option><option>Approved</option>
         </select>
+        <button class="tb-btn" id="designBtn" type="button">Cover &amp; design</button>
         <button class="tb-btn" id="pdfBtn" type="button" style="display:none">Export PDF</button>
         <button class="tb-btn hide-sm" id="exportBtn" type="button" style="display:none">Markdown</button>
         <button class="tb-btn danger" id="deleteBtn" type="button">Delete</button>
@@ -287,6 +378,119 @@ ${tbl(['Approver','Role','Signature / date'],[['[Name]','[Role]',''],['[Name]','
   }
 };
 
+/* ---------- Covers and designs ---------- */
+// Preset covers are drawn on a canvas, so the editor and the PDF use the exact same image.
+const COVER_W = 1600, COVER_H = 400;
+function seeded(n){ return () => { n |= 0; n = n + 0x6D2B79F5 | 0; let t = Math.imul(n ^ n >>> 15, 1 | n); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function linear(c, x0, y0, x1, y1, stops){ const g = c.createLinearGradient(x0, y0, x1, y1); stops.forEach((s, i) => g.addColorStop(i/(stops.length-1), s)); return g; }
+function glow(c, x, y, r, color){ const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, color); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(0, 0, COVER_W, COVER_H); }
+
+const COVERS = [
+  { id:'horizon', name:'Horizon', draw(c, w, h){
+      c.fillStyle = linear(c, 0, 0, w, h, ['#1E3A8A', '#4F46E5', '#A78BFA']); c.fillRect(0, 0, w, h);
+      glow(c, w*.78, h*1.05, h*1.1, 'rgba(255,214,170,.8)'); } },
+  { id:'dune', name:'Dune', draw(c, w, h){
+      c.fillStyle = linear(c, 0, 0, 0, h, ['#FBE7C6', '#F4B976']); c.fillRect(0, 0, w, h);
+      c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.arc(w*.2, h*.36, h*.16, 0, Math.PI*2); c.fill();
+      [['#EFA35A', .55], ['#D9803A', .7], ['#B8612A', .86]].forEach(([col, base], i) => {
+        c.fillStyle = col; c.beginPath(); c.moveTo(0, h);
+        for (let x = 0; x <= w; x += 20) c.lineTo(x, h*base + Math.sin(x/w*Math.PI*(1.5+i*.6) + i*1.3)*h*.08);
+        c.lineTo(w, h); c.closePath(); c.fill(); }); } },
+  { id:'grid', name:'Blueprint', draw(c, w, h){
+      c.fillStyle = '#0F172A'; c.fillRect(0, 0, w, h);
+      glow(c, w*.72, h*.15, h*1.3, 'rgba(56,189,248,.35)');
+      const r = seeded(7); c.fillStyle = 'rgba(56,189,248,.22)';
+      for (let x = 0; x < w; x += 40) for (let y = 0; y < h; y += 40) if (r() < .04) c.fillRect(x, y, 40, 40);
+      c.strokeStyle = 'rgba(148,163,184,.16)'; c.lineWidth = 1; c.beginPath();
+      for (let x = .5; x < w; x += 40){ c.moveTo(x, 0); c.lineTo(x, h); }
+      for (let y = .5; y < h; y += 40){ c.moveTo(0, y); c.lineTo(w, y); }
+      c.stroke(); } },
+  { id:'waves', name:'Tide', draw(c, w, h){
+      c.fillStyle = linear(c, 0, 0, w, 0, ['#0B4F4A', '#14B8A6']); c.fillRect(0, 0, w, h);
+      c.lineWidth = 2;
+      for (let i = 0; i < 14; i++){
+        c.strokeStyle = `rgba(255,255,255,${.06 + i*.02})`; c.beginPath();
+        for (let x = 0; x <= w; x += 10){ const y = h*(.12 + i*.058) + Math.sin(x/w*Math.PI*2.4 + i*.35)*h*.12; x ? c.lineTo(x, y) : c.moveTo(x, y); }
+        c.stroke(); } } },
+  { id:'blocks', name:'Blocks', draw(c, w, h){
+      c.fillStyle = '#F3EFE7'; c.fillRect(0, 0, w, h);
+      const r = seeded(21), pal = ['#2D4FD6', '#F2B544', '#E4572E', '#1F7A4D', '#1A2130'], s = 100;
+      for (let x = 0; x < w; x += s) for (let y = 0; y < h; y += s){
+        if (r() > .38) continue;
+        c.fillStyle = pal[Math.floor(r()*pal.length)]; const k = r(); c.beginPath();
+        if (k < .4) c.rect(x+8, y+8, s-16, s-16);
+        else if (k < .7) c.arc(x+s/2, y+s/2, s/2-8, 0, Math.PI*2);
+        else { const cx = x + (r() < .5 ? 8 : s-8), cy = y + (r() < .5 ? 8 : s-8); c.moveTo(cx, cy); c.arc(cx, cy, s-16, 0, Math.PI*2); c.save(); c.clip(); c.fillRect(x+8, y+8, s-16, s-16); c.restore(); continue; }
+        c.fill(); } } },
+  { id:'dots', name:'Meadow', draw(c, w, h){
+      c.fillStyle = '#EAF2EA'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(31,122,77,.55)';
+      for (let x = 14; x < w; x += 28) for (let y = 14; y < h; y += 28){ const t = x/w; c.beginPath(); c.arc(x, y, 1.2 + 8*t*t*(.6 + .4*Math.sin(y/h*Math.PI)), 0, Math.PI*2); c.fill(); } } },
+  { id:'mesh', name:'Bloom', draw(c, w, h){
+      c.fillStyle = '#FFF1F2'; c.fillRect(0, 0, w, h);
+      glow(c, w*.15, h*.2, h*1.3, 'rgba(244,114,182,.75)');
+      glow(c, w*.55, h*.95, h*1.4, 'rgba(251,146,60,.7)');
+      glow(c, w*.88, h*.1, h*1.2, 'rgba(139,92,246,.65)');
+      glow(c, w*.4, h*.05, h*.8, 'rgba(56,189,248,.4)'); } },
+  { id:'slate', name:'Slate', draw(c, w, h){
+      c.fillStyle = linear(c, 0, 0, w, h, ['#3B4A61', '#1E2636']); c.fillRect(0, 0, w, h);
+      c.strokeStyle = 'rgba(255,255,255,.06)'; c.lineWidth = 2; c.beginPath();
+      for (let x = -h; x < w; x += 22){ c.moveTo(x, h); c.lineTo(x + h, 0); }
+      c.stroke(); } }
+];
+const coverCache = {};
+function coverSrc(cover){
+  if (!cover) return null;
+  if (cover.kind === 'image') return cover.src || null;
+  const p = COVERS.find(x => x.id === cover.id); if (!p) return null;
+  if (!coverCache[p.id]){
+    const cv = document.createElement('canvas'); cv.width = COVER_W; cv.height = COVER_H;
+    p.draw(cv.getContext('2d'), COVER_W, COVER_H);
+    coverCache[p.id] = cv.toDataURL('image/jpeg', .9);
+  }
+  return coverCache[p.id];
+}
+const DEFAULT_COVER = { prd:{kind:'preset', id:'horizon'}, brd:{kind:'preset', id:'dune'}, blank:null };
+
+const DESIGNS = {
+  classic:{ name:'Classic', desc:'Serif headings, ruled sections' },
+  modern: { name:'Modern',  desc:'Sans headings in the accent color' },
+  minimal:{ name:'Minimal', desc:'Quiet type, open tables' },
+  bold:   { name:'Bold',    desc:'Solid section bands' }
+};
+const ACCENTS = [['#2D4FD6','Blue'], ['#A96A12','Amber'], ['#1F7A4D','Green'], ['#B42318','Red'], ['#7C3AED','Violet'], ['#0E7490','Teal'], ['#DB2777','Pink'], ['#334155','Slate']];
+const FONTS = { serif:'Serif', sans:'Sans', mono:'Mono' };
+const DEFAULT_DESIGN = { theme:'classic', accent:null, font:null };
+
+const isHex = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i+2), 16));
+const luminance = ([r, g, b]) => { const f = v => { v /= 255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); }; return .2126*f(r) + .7152*f(g) + .0722*f(b); };
+function lookOf(d){ const x = { ...DEFAULT_DESIGN, ...(d && d.design || {}) }; if (!DESIGNS[x.theme]) x.theme = 'classic'; if (!isHex(x.accent)) x.accent = null; if (!FONTS[x.font]) x.font = null; return x; }
+// Attributes that apply a document's design to a .sheet element.
+function sheetAttrs(type, design){
+  let a = `data-type="${type}" data-design="${design.theme}"`;
+  if (design.font) a += ` data-font="${design.font}"`;
+  if (design.accent) a += ` style="--accent:${design.accent};--on-accent:${luminance(hexRgb(design.accent)) > .45 ? '#111' : '#fff'}"`;
+  return a;
+}
+
+// Uploaded covers are center-cropped to the banner shape and stored as a compressed JPEG.
+async function readCoverFile(file){
+  if (!file || !/^image\//.test(file.type)) throw { code:'type' };
+  if (file.size > 25*1024*1024) throw { code:'size' };
+  const url = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const cv = document.createElement('canvas'); cv.width = COVER_W; cv.height = COVER_H;
+    const c = cv.getContext('2d'), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    if (!iw || !ih) throw { code:'read' };
+    const k = Math.max(COVER_W/iw, COVER_H/ih);
+    c.fillStyle = '#fff'; c.fillRect(0, 0, COVER_W, COVER_H);
+    c.drawImage(img, (COVER_W - iw*k)/2, (COVER_H - ih*k)/2, iw*k, ih*k);
+    return cv.toDataURL('image/jpeg', .82);
+  }catch(e){ throw (e && e.code) ? e : { code:'read' }; }
+  finally{ URL.revokeObjectURL(url); }
+}
+
 /* ---------- State ---------- */
 const $ = id => document.getElementById(id);
 const state = { docs:new Map(), currentId:null, view:'loading', query:'' };
@@ -333,7 +537,8 @@ function localBackend(){
   let ok = true;
   const read = () => { try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ ok=false; return []; } };
   const all = new Map(read().map(d=>[d.id,d]));
-  const write = () => { try{ localStorage.setItem(KEY, JSON.stringify([...all.values()])); }catch(e){ ok=false; throw {code:'local'}; } };
+  const write = () => { try{ localStorage.setItem(KEY, JSON.stringify([...all.values()])); }
+    catch(e){ if (e && (e.name==='QuotaExceededError' || e.code===22)) throw {code:'quota_exceeded'}; ok=false; throw {code:'local'}; } };
   return {
     get note(){ return ok ? 'Saved in this browser only.' : 'Storage is off in this browser. Documents last until you close the page.'; },
     start(cb){ cb([...all.values()]); },
@@ -438,6 +643,7 @@ function render(){
   const actions = $('docActions');
   if (state.view === 'picker'){ actions.style.display='none'; $('crumb').textContent='New document'; setSave(''); renderPicker(); }
   else if (state.view === 'doc'){ actions.style.display='inline-flex'; renderDoc(); }
+  else if (state.view === 'design'){ actions.style.display='none'; $('crumb').textContent='Cover & design'; setSave(''); renderDesignPicker(); }
 }
 
 function renderPicker(){
@@ -458,7 +664,9 @@ function renderDoc(){
   const d = state.docs.get(state.currentId); if (!d){ state.view='picker'; return render(); }
   $('crumb').textContent = TEMPLATES[d.type].label;
   $('status').value = d.status || 'Draft';
-  $('scroller').innerHTML = `<article class="sheet">
+  const cover = coverSrc(d.cover);
+  $('scroller').innerHTML = `<article class="sheet" ${sheetAttrs(d.type, lookOf(d))}>
+    ${cover ? `<div class="cover-band"><img src="${cover}" alt=""><button class="cover-edit" type="button" id="coverEditBtn">Change cover</button></div>` : ''}
     <div class="sheet-head">
       <input class="title-input" id="title" placeholder="Untitled" value="${esc(d.title||'')}" aria-label="Document title">
       <div class="meta" id="meta"></div>
@@ -489,7 +697,138 @@ function renderDoc(){
 function updateMeta(){
   const d = state.docs.get(state.currentId); const m = $('meta'); if (!d || !m) return;
   const words = ($('editor')?.innerText || '').trim().split(/\s+/).filter(Boolean).length;
-  m.innerHTML = `<span class="badge ${d.type}">${TEMPLATES[d.type].badge}</span><span>Created ${new Date(d.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span><span>Edited ${rel(d.updatedAt)}</span><span>${words} words</span>`;
+  const cover = coverSrc(d.cover);
+  m.innerHTML = `<span class="badge ${d.type}">${TEMPLATES[d.type].badge}</span><span>Created ${new Date(d.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span><span>Edited ${rel(d.updatedAt)}</span><span>${words} words</span><button class="meta-link" type="button" id="metaDesignBtn">${cover ? 'Edit cover & design' : 'Add cover & design'}</button>`;
+  const b = $('metaDesignBtn'); if (b) b.addEventListener('click', () => openDesignPicker());
+  const ce = $('coverEditBtn'); if (ce) ce.addEventListener('click', () => openDesignPicker());
+}
+
+/* ---------- Cover & design picker ---------- */
+function openDesignPicker(){
+  const d = state.docs.get(state.currentId); if (!d) return;
+  flushSave();
+  state.draft = { cover: d.cover ? { ...d.cover } : null, design: lookOf(d) };
+  state.view = 'design'; render();
+}
+
+function draftDoc(){ const d = state.docs.get(state.currentId); return d ? { ...d, cover: state.draft.cover, design: state.draft.design } : null; }
+
+function renderDesignPicker(){
+  const d = state.docs.get(state.currentId); if (!d){ state.view='picker'; return render(); }
+  const draft = draftDoc();
+  const coverTile = (inner, id, pressed, extraClass) => `<button class="cv${extraClass?' '+extraClass:''}" type="button" data-cover="${id}" aria-pressed="${pressed}">${inner}</button>`;
+  const coverGrid = `<div class="cover-grid">
+      ${coverTile('No cover', 'none', !draft.cover)}
+      ${COVERS.map(c => coverTile(`<img src="${coverSrc({kind:'preset', id:c.id})}" alt="${esc(c.name)}">`, c.id, draft.cover && draft.cover.kind==='preset' && draft.cover.id===c.id)).join('')}
+      ${coverTile('Upload…', 'upload', draft.cover && draft.cover.kind==='image', 'upload')}
+    </div><p class="hint" id="coverHint"></p><input type="file" id="coverFile" accept="image/*" style="display:none">`;
+  const themeGrid = `<div class="theme-grid">${Object.entries(DESIGNS).map(([key, t]) => `
+      <button class="th-card" type="button" data-theme="${key}" aria-pressed="${draft.design.theme===key}">
+        <div class="th-mock"><article class="sheet mini-sheet" ${sheetAttrs(d.type, {...draft.design, theme:key})}>
+          <div class="editor"><h2>Section title</h2><p>Sample body text for a quick look.</p></div>
+        </article></div>
+        <p class="nm">${t.name}</p><p class="ds">${t.desc}</p>
+      </button>`).join('')}</div>`;
+  const accentGrid = `<div class="swatches">
+      <button class="sw" type="button" data-accent="" aria-pressed="${!draft.design.accent}" title="Default" style="background:var(--${d.type==='brd'?'brd':d.type==='prd'?'prd':'blank'})"></button>
+      ${ACCENTS.map(([hex, name]) => `<button class="sw" type="button" data-accent="${hex}" aria-pressed="${draft.design.accent===hex}" title="${name}" style="background:${hex}"></button>`).join('')}
+      <label class="pill" aria-pressed="${draft.design.accent && !ACCENTS.some(a=>a[0]===draft.design.accent) ? 'true':'false'}">
+        <span class="dot" id="customDot" style="background:${isHex(draft.design.accent) && !ACCENTS.some(a=>a[0]===draft.design.accent) ? draft.design.accent : '#fff'};box-shadow:0 0 0 1px var(--line) inset"></span>Custom
+        <input type="color" id="accentCustom" value="${isHex(draft.design.accent)?draft.design.accent:'#2D4FD6'}" aria-label="Custom accent color">
+      </label>
+    </div>`;
+  const fontSeg = `<div class="seg" role="group" aria-label="Heading font">
+      ${['', ...Object.keys(FONTS)].map(k => `<button type="button" data-font="${k}" aria-pressed="${(draft.design.font||'')===k}">${k?FONTS[k]:'Auto'}</button>`).join('')}
+    </div>`;
+  $('scroller').innerHTML = `<section class="custom">
+    <div class="custom-head">
+      <div><h1>Cover & design</h1><p class="lead">Pick a cover image and a look for this document. Changes apply only when you save.</p></div>
+      <div class="custom-actions"><button class="btn" type="button" id="designCancel">Cancel</button><button class="btn primary" type="button" id="designSave">Save</button></div>
+    </div>
+    <div class="custom-grid">
+      <div class="pv-wrap"><article class="sheet pv" id="pvSheet" ${sheetAttrs(d.type, draft.design)}>
+        ${coverSrc(draft.cover) ? `<div class="cover-band"><img id="pvCover" src="${coverSrc(draft.cover)}" alt=""></div>` : ''}
+        <div class="sheet-head"><input class="title-input" value="${esc(d.title||'Untitled')}" readonly tabindex="-1" aria-hidden="true"></div>
+        <div class="editor">${d.html || '<p>Your document content will look like this.</p>'}</div>
+      </article></div>
+      <div class="opts">
+        <div class="opt"><h2>Cover image</h2>${coverGrid}</div>
+        <div class="opt"><h2>Design theme</h2>${themeGrid}</div>
+        <div class="opt"><h2>Accent color</h2>${accentGrid}</div>
+        <div class="opt"><h2>Heading font</h2>${fontSeg}</div>
+        <div class="opts-foot hide-sm"><button class="btn" type="button" id="designCancel2">Cancel</button><button class="btn primary" type="button" id="designSave2">Save</button></div>
+      </div>
+    </div>
+  </section>`;
+  $('scroller').scrollTop = 0;
+  bindDesignPicker();
+}
+
+function refreshDesignPreview(){
+  const d = state.docs.get(state.currentId); const draft = state.draft; if (!d || !draft) return;
+  const pv = $('pvSheet'); if (!pv) return;
+  pv.setAttribute('data-design', draft.design.theme);
+  if (draft.design.font) pv.setAttribute('data-font', draft.design.font); else pv.removeAttribute('data-font');
+  if (draft.design.accent) pv.style.setProperty('--accent', draft.design.accent), pv.style.setProperty('--on-accent', luminance(hexRgb(draft.design.accent)) > .45 ? '#111' : '#fff');
+  else { pv.style.removeProperty('--accent'); pv.style.removeProperty('--on-accent'); }
+  let band = pv.querySelector('.cover-band'); const src = coverSrc(draft.cover);
+  if (src){ if (!band){ band = document.createElement('div'); band.className = 'cover-band'; band.innerHTML = '<img id="pvCover" alt="">'; pv.prepend(band); } band.querySelector('img').src = src; }
+  else if (band) band.remove();
+}
+
+function setCoverHint(text, err){ const h = $('coverHint'); if (h){ h.textContent = text||''; h.classList.toggle('err', !!err); } }
+
+function bindDesignPicker(){
+  const scroller = $('scroller');
+  scroller.querySelectorAll('.cv[data-cover]').forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.dataset.cover;
+    if (id === 'upload'){ $('coverFile').click(); return; }
+    state.draft.cover = id === 'none' ? null : { kind:'preset', id };
+    renderDesignPicker();
+  }));
+  const file = $('coverFile');
+  if (file) file.addEventListener('change', async () => {
+    const f = file.files && file.files[0]; file.value=''; if (!f) return;
+    setCoverHint('Reading image…');
+    try{ const src = await readCoverFile(f); state.draft.cover = { kind:'image', src }; renderDesignPicker(); }
+    catch(e){
+      if (e && e.code==='type') setCoverHint('Please choose an image file.', true);
+      else if (e && e.code==='size') setCoverHint('That image is larger than 25 MB. Choose a smaller file.', true);
+      else setCoverHint('Couldn’t read that image. Try another file.', true);
+    }
+  });
+  scroller.querySelectorAll('.th-card[data-theme]').forEach(btn => btn.addEventListener('click', () => {
+    state.draft.design = { ...state.draft.design, theme: btn.dataset.theme };
+    scroller.querySelectorAll('.th-card').forEach(b => b.setAttribute('aria-pressed', b===btn));
+    refreshDesignPreview();
+  }));
+  scroller.querySelectorAll('[data-accent]').forEach(btn => btn.addEventListener('click', () => {
+    state.draft.design = { ...state.draft.design, accent: btn.dataset.accent || null };
+    scroller.querySelectorAll('[data-accent]').forEach(b => b.setAttribute('aria-pressed', b===btn));
+    scroller.querySelector('label.pill').setAttribute('aria-pressed', 'false');
+    refreshDesignPreview();
+  }));
+  const custom = $('accentCustom');
+  if (custom) custom.addEventListener('input', () => {
+    state.draft.design = { ...state.draft.design, accent: custom.value };
+    scroller.querySelectorAll('[data-accent]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    scroller.querySelector('label.pill').setAttribute('aria-pressed', 'true');
+    $('customDot').style.background = custom.value;
+    refreshDesignPreview();
+  });
+  scroller.querySelectorAll('[data-font]').forEach(btn => btn.addEventListener('click', () => {
+    state.draft.design = { ...state.draft.design, font: btn.dataset.font || null };
+    scroller.querySelectorAll('[data-font]').forEach(b => b.setAttribute('aria-pressed', b===btn));
+    refreshDesignPreview();
+  }));
+  const back = () => { state.view='doc'; state.draft=null; render(); };
+  ['designCancel','designCancel2'].forEach(id => { const b = $(id); if (b) b.addEventListener('click', back); });
+  const save = () => {
+    const d = state.docs.get(state.currentId); if (!d) return back();
+    d.cover = state.draft.cover; d.design = state.draft.design; d.updatedAt = Date.now();
+    persist({...d}); state.view='doc'; state.draft=null; render();
+  };
+  ['designSave','designSave2'].forEach(id => { const b = $(id); if (b) b.addEventListener('click', save); });
 }
 
 /* ---------- Editor ---------- */
@@ -629,9 +968,12 @@ function buildPdf(jsPDF, meta, blocks){
   const doc = new jsPDF({unit:'mm', format:'a4'});
   const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
   const M = 18, CW = W - M*2, BOTTOM = H - 18;
-  const accent = meta.type==='prd' ? [45,79,214] : meta.type==='brd' ? [169,106,18] : [70,78,94];
+  const accent = meta.accent ? hexRgb(meta.accent) : meta.type==='prd' ? [45,79,214] : meta.type==='brd' ? [169,106,18] : [70,78,94];
   const ink=[26,33,48], grey=[110,118,134];
   let y = M;
+  if (meta.coverSrc){
+    const bh = CW/4; doc.addImage(meta.coverSrc, 'JPEG', M, y, CW, bh); y += bh + 8;
+  }
   const lh = pt => pt*0.3528*1.45;
   const need = h => { if (y + h > BOTTOM){ doc.addPage(); y = M; } };
   function para(text, {size=10.5, style='normal', color=ink, x=M, width=CW, after=2.2}={}){
@@ -721,7 +1063,9 @@ async function exportPdf(){
   flushSave();
   const btn = $('pdfBtn'); btn.disabled = true; btn.textContent = 'Preparing…';
   try{
+    const look = lookOf(d);
     const pdf = buildPdf(window.jspdf.jsPDF, { title:d.title, type:d.type, badge:TEMPLATES[d.type].label, status:d.status||'Draft',
+      accent: look.accent, coverSrc: coverSrc(d.cover),
       date:new Date(d.updatedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) }, htmlToBlocks(d.html||''));
     const name = ((d.title||'untitled').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-').toLowerCase() || 'untitled') + '.pdf';
     await downloads.save({ filename:name, data: pdf.output('blob') });
@@ -737,7 +1081,8 @@ async function exportPdf(){
 function createDoc(type){
   pickedOnce = true;
   const t = TEMPLATES[type]; const now = Date.now();
-  const doc = { id:uid(), type, title: t.title, html: typeof t.html==='function' ? t.html().trim() : t.html, status:'Draft', createdAt:now, updatedAt:now };
+  const doc = { id:uid(), type, title: t.title, html: typeof t.html==='function' ? t.html().trim() : t.html, status:'Draft',
+    cover: DEFAULT_COVER[type] || null, design: { ...DEFAULT_DESIGN }, createdAt:now, updatedAt:now };
   state.docs.set(doc.id, doc); state.currentId = doc.id; state.view = 'doc';
   render(); persist({...doc}); closeDrawer();
   const title = $('title'); if (title){ title.focus(); if (type!=='blank') title.select(); }
@@ -769,6 +1114,7 @@ $('scroller').addEventListener('click', e => { const t = e.target.closest('[data
 $('search').addEventListener('input', e => { state.query = e.target.value; renderList(); });
 $('status').addEventListener('change', e => { const d = state.docs.get(state.currentId); if (!d) return; d.status = e.target.value; d.updatedAt = Date.now(); persist({...d}); renderList(); });
 $('deleteBtn').addEventListener('click', deleteDoc);
+$('designBtn').addEventListener('click', openDesignPicker);
 $('exportBtn').addEventListener('click', exportMd);
 $('pdfBtn').addEventListener('click', exportPdf);
 $('menuBtn').addEventListener('click', openDrawer);
