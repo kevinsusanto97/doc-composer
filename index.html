@@ -107,10 +107,29 @@ select.status{border:1px solid var(--line);background:var(--paper);border-radius
 .editor li{margin:.2em 0}
 .editor blockquote{margin:1em 0;padding:10px 16px;border-left:3px solid var(--accent,var(--prd));background:var(--accent-soft,var(--prd-soft));border-radius:0 8px 8px 0;color:var(--ink)}
 .editor hr{border:0;border-top:1px solid var(--line);margin:2em 0}
-.editor .tbl-wrap{overflow-x:auto;margin:1em 0}
+.editor .tbl-wrap{overflow-x:auto;overflow-y:hidden;margin:1em 0;padding:9px 0 14px 9px}
 .editor table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.45}
-.editor th,.editor td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;min-width:90px}
+.editor th,.editor td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;min-width:48px;overflow-wrap:break-word}
 .editor th{background:var(--rail);font-weight:600}
+
+/* Table tools overlay: a fixed layer outside #editor, positioned over the live table with
+   getBoundingClientRect(), so it never becomes part of the saved/exported HTML. */
+#tblOverlay{position:fixed;inset:0;pointer-events:none;z-index:15}
+#tblOverlay .tbl-ctrl{position:absolute;pointer-events:auto;box-sizing:border-box}
+.tbl-grip{background:var(--line);border:0;border-radius:4px;cursor:pointer;padding:0;opacity:.5;transition:opacity .1s, background .1s;color:var(--ink-3);font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center}
+.tbl-grip:hover{background:var(--ink-3);color:var(--paper);opacity:1}
+.tbl-grip.col{height:9px;top:0}
+.tbl-grip.row{width:9px;left:0}
+.tbl-resize{width:7px;margin-left:-3.5px;cursor:col-resize;background:transparent;border:0;padding:0}
+.tbl-resize:hover,.tbl-resize.active{background:var(--prd)}
+.tbl-add{background:var(--paper);border:1px solid var(--line);border-radius:5px;cursor:pointer;color:var(--ink-3);font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;opacity:.55;transition:opacity .1s}
+.tbl-add:hover{background:var(--select);color:var(--ink);opacity:1}
+.tbl-add.col{width:18px}
+.tbl-add.row{height:18px}
+.tbl-menu{background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgba(20,24,34,.16);padding:4px;min-width:150px}
+.tbl-menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:6px 9px;border-radius:6px;font-size:13px;color:var(--ink);white-space:nowrap}
+.tbl-menu button:hover{background:var(--hover)}
+.tbl-menu button.danger{color:var(--danger)}
 .editor a{color:var(--accent-ink,var(--prd))}
 
 /* Template picker */
@@ -665,6 +684,7 @@ function renderList(){
 function render(){
   renderList();
   const actions = $('docActions');
+  if (state.view !== 'doc') clearTableOverlay();
   if (state.view === 'picker'){ actions.style.display='none'; $('crumb').textContent='New document'; setSave(''); renderPicker(); }
   else if (state.view === 'doc'){ actions.style.display='inline-flex'; renderDoc(); }
   else if (state.view === 'design'){ actions.style.display='none'; $('crumb').textContent='Cover & design'; setSave(''); renderDesignPicker(); }
@@ -862,6 +882,7 @@ function bindEditor(){
   title.addEventListener('input', () => { scheduleSave(); });
   title.addEventListener('keydown', e => { if (e.key==='Enter'){ e.preventDefault(); ed.focus(); } });
   ed.addEventListener('input', scheduleSave);
+  ed.addEventListener('input', e => { if (e.target.closest && e.target.closest('table')) debounceRelayout(); });
   ed.addEventListener('paste', e => {
     e.preventDefault();
     const text = (e.clipboardData || window.clipboardData).getData('text/plain');
@@ -877,9 +898,11 @@ function bindEditor(){
     else if (b.dataset.insert==='hr') document.execCommand('insertHTML', false, '<hr><p><br></p>');
     else if (b.dataset.insert==='table') document.execCommand('insertHTML', false, '<div class="tbl-wrap"><table><thead><tr><th>Column</th><th>Column</th><th>Column</th></tr></thead><tbody><tr><td><br></td><td><br></td><td><br></td></tr><tr><td><br></td><td><br></td><td><br></td></tr></tbody></table></div><p><br></p>');
     else if (b.dataset.insert==='row') addRow();
+    if (b.dataset.insert==='table') relayoutTables();
     scheduleSave(); syncToolbar();
   });
   document.addEventListener('selectionchange', syncToolbar);
+  initTableTools();
 }
 
 function addRow(){
@@ -890,6 +913,171 @@ function addRow(){
   row.innerHTML = [...tr.children].map(()=>'<td><br></td>').join('');
   if (tr.parentElement.tagName==='THEAD'){ const tb = tr.closest('table').tBodies[0] || tr.closest('table').createTBody(); tb.insertBefore(row, tb.firstChild); }
   else tr.after(row);
+  relayoutTables();
+}
+
+/* ---------- Table tools: Notion-style grips, resize, insert/delete row & column ----------
+   Controls live in a fixed overlay outside #editor (positioned from getBoundingClientRect),
+   so they are never part of editor.innerHTML and never touch saved HTML, Markdown or PDF export. */
+function tblOverlay(){
+  let el = document.getElementById('tblOverlay');
+  if (!el){ el = document.createElement('div'); el.id = 'tblOverlay'; document.body.appendChild(el); }
+  return el;
+}
+function clearTableOverlay(){ const el = document.getElementById('tblOverlay'); if (el) el.innerHTML = ''; }
+function closeTableMenu(){ tblOverlay().querySelectorAll('.tbl-menu').forEach(m => m.remove()); }
+
+function rowEls(table){ return [...table.querySelectorAll(':scope > thead > tr, :scope > tbody > tr')]; }
+function colCount(table){ const r = table.querySelector('tr'); return r ? r.children.length : 0; }
+
+function ensureColgroup(table){
+  let cg = table.querySelector(':scope > colgroup');
+  if (!cg){
+    const firstRow = table.querySelector('tr'); if (!firstRow) return null;
+    cg = document.createElement('colgroup');
+    [...firstRow.children].forEach(c => { const col = document.createElement('col'); col.style.width = Math.max(48, Math.round(c.getBoundingClientRect().width)) + 'px'; cg.appendChild(col); });
+    table.insertBefore(cg, table.firstChild);
+    resizeTableToColumns(table);
+  }
+  return cg;
+}
+function resizeTableToColumns(table){
+  const cg = table.querySelector(':scope > colgroup'); if (!cg) return;
+  table.style.tableLayout = 'fixed';
+  table.style.width = [...cg.children].reduce((a,c) => a + (parseFloat(c.style.width) || 120), 0) + 'px';
+}
+
+function insertRowAt(table, refRow, where){ // where: 'before' | 'after'
+  const n = colCount(table);
+  const tag = refRow.parentElement.tagName === 'THEAD' ? 'th' : 'td';
+  const tr = document.createElement('tr');
+  for (let i=0;i<n;i++){ const c = document.createElement(tag); c.innerHTML = '<br>'; tr.appendChild(c); }
+  if (refRow.parentElement.tagName === 'THEAD' && where === 'after'){
+    const tb = table.tBodies[0] || table.createTBody(); tb.insertBefore(tr, tb.firstChild);
+  } else if (where === 'before') refRow.before(tr); else refRow.after(tr);
+  return tr;
+}
+function deleteRow(table, row){ if (rowEls(table).length > 1) row.remove(); }
+
+function insertColumnAt(table, index){
+  ensureColgroup(table);
+  const cg = table.querySelector(':scope > colgroup');
+  const col = document.createElement('col'); col.style.width = '120px';
+  cg.insertBefore(col, cg.children[index] || null);
+  rowEls(table).forEach(row => {
+    const tag = row.parentElement.tagName === 'THEAD' ? 'th' : 'td';
+    const cell = document.createElement(tag); cell.innerHTML = '<br>';
+    row.insertBefore(cell, row.children[index] || null);
+  });
+  resizeTableToColumns(table);
+}
+function deleteColumnAt(table, index){
+  const cg = table.querySelector(':scope > colgroup');
+  if (!cg || cg.children.length <= 1) return;
+  if (cg.children[index]) cg.children[index].remove();
+  rowEls(table).forEach(row => { if (row.children[index]) row.children[index].remove(); });
+  resizeTableToColumns(table);
+}
+
+function openRowMenu(table, row, anchorRect){
+  closeTableMenu();
+  const menu = document.createElement('div'); menu.className = 'tbl-ctrl tbl-menu';
+  menu.innerHTML = `<button type="button" data-act="before">Insert row above</button><button type="button" data-act="after">Insert row below</button><button type="button" data-act="del" class="danger">Delete row</button>`;
+  menu.style.left = anchorRect.left + 'px'; menu.style.top = (anchorRect.bottom + 4) + 'px';
+  tblOverlay().appendChild(menu);
+  menu.addEventListener('click', e => {
+    const act = e.target.dataset.act; if (!act) return;
+    if (act === 'del') deleteRow(table, row); else insertRowAt(table, row, act);
+    closeTableMenu(); relayoutTables(); scheduleSave();
+  });
+}
+function openColMenu(table, index, anchorRect){
+  closeTableMenu();
+  const menu = document.createElement('div'); menu.className = 'tbl-ctrl tbl-menu';
+  menu.innerHTML = `<button type="button" data-act="left">Insert column left</button><button type="button" data-act="right">Insert column right</button><button type="button" data-act="del" class="danger">Delete column</button>`;
+  menu.style.left = anchorRect.left + 'px'; menu.style.top = (anchorRect.bottom + 4) + 'px';
+  tblOverlay().appendChild(menu);
+  menu.addEventListener('click', e => {
+    const act = e.target.dataset.act; if (!act) return;
+    if (act === 'left') insertColumnAt(table, index);
+    else if (act === 'right') insertColumnAt(table, index + 1);
+    else deleteColumnAt(table, index);
+    closeTableMenu(); relayoutTables(); scheduleSave();
+  });
+}
+
+function startColResize(e, table, col){
+  e.preventDefault(); e.stopPropagation();
+  const startWidth = parseFloat(col.style.width) || col.getBoundingClientRect().width;
+  const startX = e.clientX;
+  e.currentTarget.classList.add('active');
+  function onMove(ev){
+    col.style.width = Math.max(48, Math.round(startWidth + (ev.clientX - startX))) + 'px';
+    resizeTableToColumns(table); relayoutTables();
+  }
+  function onUp(){ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); scheduleSave(); }
+  document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+}
+
+function relayoutTables(){
+  const ed = $('editor');
+  clearTableOverlay();
+  if (state.view !== 'doc' || !ed) return;
+  const wraps = [...ed.querySelectorAll('.tbl-wrap')];
+  if (!wraps.length) return;
+  const layer = tblOverlay();
+  const frag = document.createDocumentFragment();
+  wraps.forEach(wrap => {
+    const table = wrap.querySelector(':scope > table'); if (!table) return;
+    ensureColgroup(table);
+    const cg = table.querySelector(':scope > colgroup'); if (!cg) return;
+    const rows = rowEls(table); if (!rows.length) return;
+    const headCells = [...rows[0].children];
+    const tRect = table.getBoundingClientRect();
+    const mk = (cls) => { const el = document.createElement('button'); el.type = 'button'; el.className = 'tbl-ctrl ' + cls; return el; };
+    headCells.forEach((cell, i) => {
+      const r = cell.getBoundingClientRect();
+      const grip = mk('tbl-grip col'); grip.title = 'Column options'; grip.textContent = '⋯';
+      grip.style.left = r.left + 'px'; grip.style.width = r.width + 'px'; grip.style.top = (tRect.top - 11) + 'px';
+      grip.addEventListener('click', ev => openColMenu(table, i, ev.currentTarget.getBoundingClientRect()));
+      frag.appendChild(grip);
+      const rz = mk('tbl-resize'); rz.style.left = r.right + 'px'; rz.style.top = tRect.top + 'px'; rz.style.height = tRect.height + 'px';
+      rz.addEventListener('mousedown', ev => startColResize(ev, table, cg.children[i]));
+      frag.appendChild(rz);
+    });
+    const lastCell = headCells[headCells.length - 1].getBoundingClientRect();
+    const addCol = mk('tbl-add col'); addCol.title = 'Insert column'; addCol.textContent = '+';
+    addCol.style.left = (lastCell.right + 4) + 'px'; addCol.style.top = tRect.top + 'px'; addCol.style.height = tRect.height + 'px';
+    addCol.addEventListener('click', () => { insertColumnAt(table, colCount(table)); relayoutTables(); scheduleSave(); });
+    frag.appendChild(addCol);
+    rows.forEach((row, i) => {
+      const r = row.getBoundingClientRect();
+      const grip = mk('tbl-grip row'); grip.title = 'Row options'; grip.textContent = '⋮';
+      grip.style.top = r.top + 'px'; grip.style.height = r.height + 'px'; grip.style.left = (tRect.left - 11) + 'px';
+      grip.addEventListener('click', ev => openRowMenu(table, row, ev.currentTarget.getBoundingClientRect()));
+      frag.appendChild(grip);
+    });
+    const lastRow = rows[rows.length - 1].getBoundingClientRect();
+    const addRowBtn = mk('tbl-add row'); addRowBtn.title = 'Insert row'; addRowBtn.textContent = '+';
+    addRowBtn.style.top = (lastRow.bottom + 4) + 'px'; addRowBtn.style.left = tRect.left + 'px'; addRowBtn.style.width = tRect.width + 'px';
+    addRowBtn.addEventListener('click', () => { insertRowAt(table, rows[rows.length - 1], 'after'); relayoutTables(); scheduleSave(); });
+    frag.appendChild(addRowBtn);
+  });
+  layer.appendChild(frag);
+}
+
+let tableLayoutTimer = null;
+function debounceRelayout(){ clearTimeout(tableLayoutTimer); tableLayoutTimer = setTimeout(relayoutTables, 120); }
+
+let tableToolsInstalled = false;
+function initTableTools(){
+  relayoutTables();
+  if (tableToolsInstalled) return;
+  tableToolsInstalled = true;
+  window.addEventListener('resize', debounceRelayout);
+  window.addEventListener('scroll', debounceRelayout, true); // capture: also catches .scroller / .tbl-wrap scrolling
+  document.addEventListener('mousedown', e => { if (!e.target.closest('.tbl-menu')) closeTableMenu(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTableMenu(); });
 }
 
 function syncToolbar(){
